@@ -1,11 +1,11 @@
-import { Field, SmartContract, state, State, method, Reducer, Proof } from 'snarkyjs';
-import {RecursiveAddition, RecursiveAdditionPublicInput} from './RecursiveAddition';
+import { Field, SmartContract, state, State, method} from 'snarkyjs';
+import { RecursiveAddition } from '../ZkProgram/RecursiveAddition.js';
 /**
  * Basic Example for a counter zkApp with recursion
  * See https://docs.minaprotocol.com/zkapps for more info.
  */
 
-export class CounterZkapp extends SmartContract {
+export class RecusiveCounterZkapp extends SmartContract {
 
  // on-chain version of our state. This will typically lag
  // behind the version that's implicitly represented by the list of actions
@@ -25,7 +25,8 @@ export class CounterZkapp extends SmartContract {
     // 3. get proof public input
     const {initialCounter, currentCounter, totalIterations} = proof.publicInput;
     // 3. update counter
-    this.counter.set(currentCounter);
+    // only set to Field(43) to check implementation
+    this.counter.set(Field(43));
  }
 }
 

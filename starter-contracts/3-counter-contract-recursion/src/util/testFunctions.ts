@@ -1,49 +1,15 @@
-import { SelfProof, Field, Experimental, Proof, Struct } from 'snarkyjs';
-import { tic, toc } from './util/tictoc.js';
+import { Field, Experimental, Proof } from 'snarkyjs';
+import { tic, toc } from './tictoc.js';
+import { RecursiveAddOne, RecursiveAdditionPublicInput } from '../ZkProgram/RecursiveAddition.js';
 
-export class RecursiveAdditionPublicInput extends Struct({
-    initialCounter: Field,
-    currentCounter: Field,
-    totalIterations: Field,
-}) {}
+//tic('compiling AddOne zkProgram');
+//await RecursiveAddOne.compile();
+//toc();
 
-export const AddOne = Experimental.ZkProgram({
-  publicInput: RecursiveAdditionPublicInput,
-
-  methods: {
-    baseCase: {
-      privateInputs: [],
-
-      method(publicInput: RecursiveAdditionPublicInput) {
-        publicInput.initialCounter.assertEquals(publicInput.currentCounter);
-      },
-    },
-
-    step: {
-      privateInputs: [SelfProof],
-
-      method(publicInput: RecursiveAdditionPublicInput, earlierProof: SelfProof<RecursiveAdditionPublicInput, void>) {
-        earlierProof.verify();
-        // assert that the earlier proof's public input initialCounter 
-        // is equal to the currentCounter minus the totalIterations
-        earlierProof.publicInput.initialCounter.assertEquals(
-            publicInput.currentCounter.sub(Field(1).mul(publicInput.totalIterations))
-            );
-      },
-    },
-  },
-});
-
-export class RecursiveAddition extends Experimental.ZkProgram.Proof(AddOne) {}
-
-tic('compiling AddOne zkProgram');
-await AddOne.compile();
-toc();
-
-await testRecursion(AddOne, 1);
+//await testRecursion(RecursiveAddOne, 1);
 
 async function testRecursion(
-    Program: typeof AddOne,
+    Program: typeof RecursiveAddOne,
     maxProofsVerified: number
   ) {
     console.log(`testing maxProofsVerified = ${maxProofsVerified}`);
@@ -68,7 +34,7 @@ async function testRecursion(
     if (initialProof.maxProofsVerified === 0) return;
   
     tic('executing step');
-    const step1 = new RecursiveAdditionPublicInput({ initialCounter: Field(1), currentCounter: Field(1), totalIterations: Field(1) });
+    const step1 = new RecursiveAdditionPublicInput({ initialCounter: Field(0), currentCounter: Field(1), totalIterations: Field(1) });
     p1 = await Program.step(step1, initialProof);
     toc();
     p1 = testJsonRoundtrip(ProofClass, p1);
@@ -95,3 +61,5 @@ function testJsonRoundtrip(ProofClass: any, proof: Proof<RecursiveAdditionPublic
     );
     return ProofClass.fromJSON(jsonProof);
   }
+export { RecursiveAdditionPublicInput, RecursiveAddOne };
+

@@ -8,22 +8,44 @@ This project, written in TypeScript, leverages the `snarkyjs` library. The imple
 
 The project consists of two parts:
 
-- The `AddOne` ZkProgram (in `RecursiveAddition.ts`)
-  - It takes a `Struct` as a public input, called `RecursiveAdditionPublicInput` which has two properties `initialCounter` and `currentCounter`. The `totalInteractions` allows us to use more interesting data structures than only `Field` allows for!
-  - The `AddOne` ZkProgram has a base case and a `step` that verifies the correctness of the previous state and calculates the new state.
-  - This file also includes `testRecursion` function for testing the recursive addition.
-  - Uses the `tictoc` script in the `./util` directory for time profiling.
+- A ZkProgram (in `./ZkProgram/RecursiveAddition.ts`)
+  - It takes a `Struct` as a public input, called `RecursiveAdditionPublicInput` which has three properties `initialCounter`, `currentCounter`, and `totalInteractions`. The `Struct` allows us to use more interesting data structures than only `Field` allows for!
+  - The `RecursiveAddOne` ZkProgram has a `baseCase` method that defines the starting program values and a `step` method that verifies the correctness of the previous state and constrains what new state can be created.
 
-- The `CounterZkApp` smart contract (in `RecursiveAddOneZkApp.ts`)
+- A ZkApp smart contract (in `./ZkApp/AddOneZkApp.ts`)
   - It maintains a `counter` state.
-  - The `settleState` method settles the final state in the smart contract.
+  - It has a `settleState` method takes a `RecursiveAddition` proof that results from the ZkProgram and can settle the final recursive state in the smart contract.
 
 Here's a sequence diagram for how I understand the process:
 
 ```mermaid
+sequenceDiagram
+    participant Deployer
+    participant zkProgram
+    participant zkApp Contract
+    participant User1
+    participant User2
+    participant Mina
 
+    Deployer->>zkApp Contract: Compile CounterZkapp Contract
 
+    Deployer->>Mina: Send deploy tx with initial contract states
+    Mina->>Deployer: zkApp contract deployment confirmed
+    Note over Mina: zkApp State: counter = 0
+
+    User1->>zkProgram: Construct a proof, p0, with zkProgram.baseCase() (counter=zkApp.counter.get())
+    User1->>User2: Share proof
+    
+    User2->>zkProgram: Construct a proof, p1, with zkProgram.step() (counter++)
+    User2->>User1: Share proof
+
+    User1->>zkApp Contract: Construct tx that calls contract.settleState(p1)
+    User1->>User1: Prove tx
+    User1->>Mina: Send tx
+    Note over Mina: zkApp State: counter = 2 
 ```
+
+The interesting part is that these recursive program proofs can be exchanged between `User1` and `User2` as many times as they desire, or until some final state is reached! This opens up Mina to benefit from off-chain computation/proving that does not cause higher gas fees on the L1.
 
 ## How to build
 
@@ -31,9 +53,9 @@ Here's a sequence diagram for how I understand the process:
 npm run build
 ```
 
-## How to run the `RecursiveAddition.ts` script
+## How to run the `RunInteraction.js` script
 ```sh
-npm run build && node build/src/RecursiveAddition.js
+npm run build && node build/src/RunInteraction.js
 ```
 
 ## How to run tests
