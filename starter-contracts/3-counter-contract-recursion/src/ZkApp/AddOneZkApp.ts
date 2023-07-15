@@ -25,6 +25,7 @@ export class RecusiveCounterZkapp extends SmartContract {
     // 3. get proof public input
     const {initialCounter, currentCounter, totalIterations} = proof.publicInput;
     // 3. update counter
+    // TODO: this doesn't actually work, but it's a start
     this.counter.set(currentCounter);
  }
 }
