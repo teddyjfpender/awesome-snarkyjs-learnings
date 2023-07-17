@@ -5,9 +5,9 @@
  * See https://docs.minaprotocol.com/zkapps for more info.
  */
 
-import { AccountUpdate, Field, Mina, PrivateKey } from "snarkyjs";
-import { RecusiveCounterZkapp } from "./ZkApp/AddOneZkApp.js";
-import { RecursiveAddOne, RecursiveAdditionPublicInput } from "./ZkProgram/RecursiveAddition.js";
+import { AccountUpdate, Field, Mina, PrivateKey, verify } from "snarkyjs";
+import { RecusiveCounterZkapp } from "./ZkApp/AddZkApp.js";
+import { RecursiveAdd, RecursiveAdditionPublicInput, RecursiveAdditionPublicOutput } from "./ZkProgram/RecursiveAddition.js";
 import { tic, toc } from "./util/tictoc.js";
 
 
@@ -36,26 +36,28 @@ console.log("counter initialisation: ", counter);
 const initialCounterValue = await zkApp.counter.get();
 // compile the recursive addition zkProgram
 tic('compiling RecursiveAddition zkProgram and zkApp');
-await RecursiveAddOne.compile();
+const { verificationKey } = await RecursiveAdd.compile();
 // compile the recursive counter zkApp after the zkProgram (as the zkApp depends on the zkProgram)
 await RecusiveCounterZkapp.compile();
 toc();
-tic('executing base case');
-// create initial public input
-const initialPublicInput = new RecursiveAdditionPublicInput({ initialCounter: initialCounterValue, currentCounter: Field(0), totalIterations: Field(0) });
-// create base case proof
-let proof0 = await RecursiveAddOne.baseCase(initialPublicInput)
+tic('making proof 0');
+const proof0Input = new RecursiveAdditionPublicInput({ number: initialCounterValue, numberToAdd: Field(0), newState: Field(0) })
+const proof0 = await RecursiveAdd.init(proof0Input);
+console.log("Proof 0 Verification: ", await verify(proof0.toJSON(), verificationKey));
+console.log("Proof 0: ", proof0.toJSON());
 toc();
-tic('executing first recursive addition');
-const proof1 = await RecursiveAddOne.step(initialPublicInput, proof0);
-toc();
-tic('executing second recursive addition');
-const proof2 = await RecursiveAddOne.step(initialPublicInput, proof1);
-toc();
+tic('making proof 1');
+const proof1Input = new RecursiveAdditionPublicInput({ number: initialCounterValue, numberToAdd: Field(11), newState: Field(11) })
+const proof1 = await RecursiveAdd.addNumber(proof1Input, proof0);
+console.log("Proof 1 Verification: ", await verify(proof1.toJSON(), verificationKey));
+console.log("Proof 1: ", proof1.toJSON());
+toc(); 
+const ok = await verify(proof1.toJSON(), verificationKey);
+console.log('ok', ok);
 
 // post proof to the zkApp
 const postProofTxn = await Mina.transaction(userOneAccount, () => {
-    zkApp.settleState(proof2);
+    zkApp.settleState(proof1);
 })
 await postProofTxn.prove();
 await postProofTxn.sign([userOneKey]).send();

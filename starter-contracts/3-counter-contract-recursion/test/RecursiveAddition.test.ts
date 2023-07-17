@@ -1,4 +1,4 @@
-import { RecusiveCounterZkapp } from '../src/ZkApp/AddOneZkApp';
+import { RecusiveCounterZkapp } from '../src/ZkApp/AddZkApp';
 import { Field, Mina, PrivateKey, PublicKey, AccountUpdate } from 'snarkyjs';
 import { RecursiveAddOne, RecursiveAdditionPublicInput } from '../src/util/testFunctions.js';
 import { tic, toc } from '../src/util/tictoc';

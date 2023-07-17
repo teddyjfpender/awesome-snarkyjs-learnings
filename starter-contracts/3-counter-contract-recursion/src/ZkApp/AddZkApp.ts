@@ -23,10 +23,10 @@ export class RecusiveCounterZkapp extends SmartContract {
     // 2. verify proof
     proof.verify();
     // 3. get proof public input
-    const {initialCounter, currentCounter, totalIterations} = proof.publicInput;
-    // 3. update counter
+    const {newState} = proof.publicOutput;
+    // 4. update counter
     // TODO: this doesn't actually work, but it's a start
-    this.counter.set(currentCounter);
+    this.counter.set(newState);
  }
 }
 

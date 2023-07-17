@@ -1,4 +1,4 @@
-# Mina zkApp: Counter Zkapp Contract With Recursion (Unfinished)
+# Mina zkApp: Counter Zkapp Contract With Recursion
 
 This project demonstrates how to build a simple zkApp with recursion in Mina Protocol, making use of Zero Knowledge Proofs (zk-SNARKs). We create a basic `AddOne` ZkProgram that recursively increments a state. This state is then settled in a `CounterZkApp` smart contract on-chain. 
 
@@ -9,8 +9,8 @@ This project, written in TypeScript, leverages the `snarkyjs` library. The imple
 The project consists of two parts:
 
 - A ZkProgram (in `./ZkProgram/RecursiveAddition.ts`)
-  - It takes a `Struct` as a public input, called `RecursiveAdditionPublicInput` which has three properties `initialCounter`, `currentCounter`, and `totalInteractions`. The `Struct` allows us to use more interesting data structures than only `Field` allows for!
-  - The `RecursiveAddOne` ZkProgram has a `baseCase` method that defines the starting program values and a `step` method that verifies the correctness of the previous state and constrains what new state can be created.
+  - It takes a `Struct` as a public input, called `RecursiveAdditionPublicInput` which has three properties `number`, `numberToAdd`, and `newState`. The `Struct` allows us to use more interesting data structures than only `Field` allows for!
+  - The `RecursiveAdd` ZkProgram has a `init` method that defines the starting program values and a `add` method that verifies the correctness of the previous state and constrains what new state can be created. Note well that this recursive program has minimal constraints and anyone could use it! It is important to not only define what you constraints should allow for but also what they shouldn't allow for.
 
 - A ZkApp smart contract (in `./ZkApp/AddOneZkApp.ts`)
   - It maintains a `counter` state.

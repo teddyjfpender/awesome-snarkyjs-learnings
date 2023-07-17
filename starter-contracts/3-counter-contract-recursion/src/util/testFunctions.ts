@@ -1,24 +1,24 @@
 import { Field, Experimental, Proof } from 'snarkyjs';
 import { tic, toc } from './tictoc.js';
-import { RecursiveAddOne, RecursiveAdditionPublicInput } from '../ZkProgram/RecursiveAddition.js';
+import { RecursiveAdd, RecursiveAdditionPublicInput } from '../ZkProgram/RecursiveAddition.js';
 
 //tic('compiling AddOne zkProgram');
 //await RecursiveAddOne.compile();
 //toc();
 
 //await testRecursion(RecursiveAddOne, 1);
-
+/*
 async function testRecursion(
-    Program: typeof RecursiveAddOne,
+    Program: typeof RecursiveAdd,
     maxProofsVerified: number
   ) {
     console.log(`testing maxProofsVerified = ${maxProofsVerified}`);
   
     let ProofClass = Experimental.ZkProgram.Proof(Program);
-    const initValues = new RecursiveAdditionPublicInput({ initialCounter: Field(0), currentCounter: Field(0), totalIterations: Field(0) });
+    const initValues = new RecursiveAdditionPublicInput({ number: Field(0), numberToAdd: Field(0)});
   
     tic('executing base case');
-    let initialProof = await Program.baseCase(initValues);
+    let initialProof = await Program.init(initValues);
     toc();
     initialProof = testJsonRoundtrip(ProofClass, initialProof);
     initialProof.verify();
@@ -33,9 +33,9 @@ async function testRecursion(
     let p1;
     if (initialProof.maxProofsVerified === 0) return;
   
-    tic('executing step');
-    const step1 = new RecursiveAdditionPublicInput({ initialCounter: Field(0), currentCounter: Field(1), totalIterations: Field(1) });
-    p1 = await Program.step(step1, initialProof);
+    tic('executing add');
+    const step1 = new RecursiveAdditionPublicInput({ number: Field(0), numberToAdd: Field(0)});
+    p1 = await Program.add(step1, initialProof);
     toc();
     p1 = testJsonRoundtrip(ProofClass, p1);
     tic('verifying step');
@@ -63,3 +63,4 @@ function testJsonRoundtrip(ProofClass: any, proof: Proof<RecursiveAdditionPublic
   }
 export { RecursiveAdditionPublicInput, RecursiveAddOne };
 
+*/

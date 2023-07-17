@@ -1,36 +1,42 @@
 import { SelfProof, Field, Experimental, Proof, Struct } from 'snarkyjs';
 
 export class RecursiveAdditionPublicInput extends Struct({
-    initialCounter: Field,
-    currentCounter: Field,
-    totalIterations: Field,
+    number: Field,
+    numberToAdd: Field,
+    newState: Field,
 }) {}
 
-export const RecursiveAddOne = Experimental.ZkProgram({
+export class RecursiveAdditionPublicOutput extends Struct({
+  newState: Field,
+}) {}
+
+export const RecursiveAdd = Experimental.ZkProgram({
   publicInput: RecursiveAdditionPublicInput,
+  publicOutput: RecursiveAdditionPublicOutput,
 
   methods: {
-    baseCase: {
+    init: {
       privateInputs: [],
 
-      method(publicInput: RecursiveAdditionPublicInput) {
-        publicInput.initialCounter.assertEquals(publicInput.currentCounter);
+      method(publicInput: RecursiveAdditionPublicInput): RecursiveAdditionPublicOutput {
+        publicInput.number.assertEquals(Field(0));
+        return new RecursiveAdditionPublicOutput({ newState: publicInput.numberToAdd });
       },
     },
 
-    step: {
+    addNumber: {
       privateInputs: [SelfProof],
 
-      method(publicInput: RecursiveAdditionPublicInput, earlierProof: SelfProof<RecursiveAdditionPublicInput, void>) {
+      method(publicInput: RecursiveAdditionPublicInput, earlierProof: SelfProof<RecursiveAdditionPublicInput, void>): RecursiveAdditionPublicOutput {
+        // verify the earlier proof
         earlierProof.verify();
-        // assert that the earlier proof's public input initialCounter 
-        // is equal to the currentCounter minus the totalIterations
-        earlierProof.publicInput.initialCounter.assertEquals(
-            publicInput.currentCounter.sub(Field(1).mul(publicInput.totalIterations))
-            );
+        // check that the next state is the sum of the previous state and the number to add
+        publicInput.newState.assertEquals(earlierProof.publicInput.newState.add(publicInput.numberToAdd));
+        // return the new state
+        return new RecursiveAdditionPublicOutput({ newState: publicInput.newState });
       },
     },
   },
 });
 
-export class RecursiveAddition extends Experimental.ZkProgram.Proof(RecursiveAddOne) {}
+export class RecursiveAddition extends Experimental.ZkProgram.Proof(RecursiveAdd) {}
