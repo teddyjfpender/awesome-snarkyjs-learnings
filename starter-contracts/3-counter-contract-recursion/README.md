@@ -47,6 +47,16 @@ sequenceDiagram
 
 The interesting part is that these recursive program proofs can be exchanged between `User1` and `User2` as many times as they desire, or until some final state is reached! This opens up Mina to benefit from off-chain computation/proving that does not cause higher gas fees on the L1.
 
+## Things to think about
+Should we build a zkApp that works using a ZkProgram like the `RecursiveAdd` in this example, the user experience can be quite a challenge! For example, the proving time when running the `RunInteraction.js` script:
+```sh
+compiling RecursiveAddition zkProgram and zkApp... 73.757 sec
+making proof 0... 570.915 sec
+making proof 1... 455.099 sec
+```
+As a zkApp developer, this should direct our focus to consider who might be the user of this kind of zkApps, there are many interesting solutions and ideas in this area and I encourage any reader to delve into this topic! zkApps as roll-ups, or correctly, Validiums, may make a lot of sense here.
+
+
 ## How to build
 
 ```sh
