@@ -54,7 +54,7 @@ compiling RecursiveAddition zkProgram and zkApp... 73.757 sec
 making proof 0... 570.915 sec
 making proof 1... 455.099 sec
 ```
-As a zkApp developer, this should direct our focus to consider who might be the user of this kind of zkApps, there are many interesting solutions and ideas in this area and I encourage any reader to delve into this topic! zkApps as roll-ups, or correctly, Validiums, may make a lot of sense here.
+As a zkApp developer, this should direct our focus to consider who might be the user of this kind of zkApps, there are many interesting solutions and ideas in this area and I encourage any reader to delve into this topic! zkApps as roll-ups, or correctly, Validiums, may make a lot of sense here. Perhaps we can batch many transactions together, use a zkProgram to prove their state changes from `S_0 -> S_1 -> ... -> S_n`, and eventually settle that state on the zkApp contract at the L1.
 
 
 ## How to build
