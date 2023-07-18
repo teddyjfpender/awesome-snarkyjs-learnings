@@ -1,10 +1,8 @@
-//const cors = require('cors');
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
 
 import {
-  isReady,
   PrivateKey,
   Field,
   MerkleTree,
@@ -15,60 +13,49 @@ import {
   Mina,
 } from 'snarkyjs';
 
-await isReady;
+// Data types
+type Items = [string, string[]];
+type RootData = { rootNumber: number, items: Items[] };
+type Database = Record<string, { nextNumber: number, height: number, root2data: Record<string, RootData> }>;
 
 console.log(
   'CAUTION: This project is in development and not to be relied upon to guarantee storage in production environments.'
 );
 
+// Initialize express application
 const app = express();
-const port = 3001;
+const port: number = 3001;
 
+// Apply middleware
 app.use(cors());
 app.use(express.json());
 
-// ==============================================================================
-
-const maxHeight = 256;
-
-const useLocalBlockchain = false;
-
+const maxHeight: number = 256;
+const useLocalBlockchain: boolean = false;
 const Local = Mina.LocalBlockchain();
+
 if (useLocalBlockchain) {
   Mina.setActiveInstance(Local);
 } else {
-  const Berkeley = Mina.BerkeleyQANet(
+  const Berkeley = Mina.Network(
     'https://proxy.berkeley.minaexplorer.com/graphql'
   );
   Mina.setActiveInstance(Berkeley);
 }
 
-const saveFile = 'database.json';
+const saveFile: string = 'database.json';
 
-// ==============================================================================
-
-type data_obj_map = {
-  [root: string]: { rootNumber: number; items: Array<[string, string[]]> };
-};
-
-let database: {
-  [zkAppAddress: string]: {
-    nextNumber: number;
-    height: number;
-    root2data: data_obj_map;
-  };
-} = {};
+let database: Database = {};
 
 let serverPrivateKey: PrivateKey;
 if (fs.existsSync(saveFile)) {
-  var fileData = fs.readFileSync(saveFile, 'utf8');
+  const fileData: string = fs.readFileSync(saveFile, 'utf8');
   const data = JSON.parse(fileData);
   database = data.database;
   serverPrivateKey = PrivateKey.fromBase58(data.serverPrivateKey58);
   console.log('found database');
 } else {
   serverPrivateKey = PrivateKey.random();
-
   fs.writeFileSync(
     saveFile,
     JSON.stringify({
@@ -80,33 +67,28 @@ if (fs.existsSync(saveFile)) {
 }
 
 const serverPublicKey = serverPrivateKey.toPublicKey();
-
 console.log('Server using public key', serverPublicKey.toBase58());
-
-// ==============================================================================
 
 (async () => {
   for (;;) {
     console.log('running cleanup');
-
-    for (let zkAppAddress in database) {
+    for (const zkAppAddress in database) {
       let response = await fetchAccount({
         publicKey: PublicKey.fromBase58(zkAppAddress),
       });
       if (response.account != null && response.account.zkapp != null) {
         let accountRootNumberF = Field(response.account.zkapp.appState![1]);
         let accountRootNumber = accountRootNumberF.toBigInt();
-        var root2data = database[zkAppAddress].root2data;
+        const root2data = database[zkAppAddress].root2data;
         database[zkAppAddress].root2data = {};
         console.log('cleaning up', zkAppAddress);
-        for (let root in root2data) {
+        for (const root in root2data) {
           if (root2data[root].rootNumber >= accountRootNumber) {
             database[zkAppAddress].root2data[root] = root2data[root];
           }
         }
       }
     }
-
     fs.writeFileSync(
       saveFile,
       JSON.stringify({
@@ -115,13 +97,11 @@ console.log('Server using public key', serverPublicKey.toBase58());
       }),
       'utf8'
     );
-
     await new Promise((resolve) => setTimeout(resolve, 60000));
   }
 })();
 
-// ==============================================================================
-
+// Route for adding data to the database
 app.post('/data', (req, res) => {
   const height: number = req.body.height;
   const items: Array<[string, string[]]> = req.body.items;
@@ -206,8 +186,7 @@ app.post('/data', (req, res) => {
   });
 });
 
-// ==============================================================================
-
+// Route for retrieving data from the database
 app.get('/data', (req, res) => {
   const zkAppAddress58 = req.query.zkAppAddress;
   const root = req.query.root;
@@ -222,18 +201,14 @@ app.get('/data', (req, res) => {
   }
 });
 
-// ==============================================================================
-
+// Route for retrieving the server's public key
 app.get('/publicKey', (req, res) => {
   res.json({
     serverPublicKey58: serverPublicKey.toBase58(),
   });
 });
 
-// ==============================================================================
-
+// Start listening for incoming HTTP requests
 app.listen(port, () =>
   console.log(`Storage Server listening on port ${port}!`)
 );
-
-// ==============================================================================
