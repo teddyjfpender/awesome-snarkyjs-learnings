@@ -1,11 +1,18 @@
 import {
+  AccountUpdate,
+    Bool,
     Field,
     Mina,
     PrivateKey,
     PublicKey,
+    SmartContract,
     fetchAccount,
   } from 'snarkyjs';
   
+import fs from 'fs'; 
+import { NumberTreeContract } from '../ZkApp/NumberTreeContract.js';
+import * as OffChainStorage from '../OffChainStorage/offChainStorage.js';
+
   // ========================================================
   
   export const loopUntilAccountExists = async (
@@ -121,3 +128,156 @@ import {
   }
   
   // ========================================================
+
+  export type ParticipantKeys = {
+    feePayerPrivateKey: PrivateKey;
+    feePayerPublicKey: PublicKey;
+    zkAppPrivateKey: PrivateKey;
+    zkAppPublicKey: PublicKey;
+  };
+  
+  export async function generateFeePayerAndZkAppKeys(useLocal: boolean, proofsEnabled: boolean): Promise<ParticipantKeys> {
+  if (useLocal) {
+    const Local = Mina.LocalBlockchain({ proofsEnabled: proofsEnabled });
+    Mina.setActiveInstance(Local);
+  
+    const feePayerKey = Local.testAccounts[0].privateKey;
+    const feePayerPublicKey = feePayerKey.toPublicKey();
+    const zkAppPrivateKey = PrivateKey.random();
+    const zkAppPublicKey = zkAppPrivateKey.toPublicKey();
+    return {
+      feePayerPrivateKey: feePayerKey,
+      feePayerPublicKey: feePayerPublicKey,
+      zkAppPrivateKey: zkAppPrivateKey,
+      zkAppPublicKey: zkAppPublicKey
+    }
+  } else {
+    const Berkeley = Mina.Network(
+      'https://proxy.berkeley.minaexplorer.com/graphql'
+    );
+    Mina.setActiveInstance(Berkeley);
+  
+    const deployAlias = process.argv[2];
+  
+    const deployerKeyFileContents = fs.readFileSync(
+      `keys/${deployAlias}.json`,
+      'utf8'
+    );
+  
+    const deployerPrivateKeyBase58 = JSON.parse(deployerKeyFileContents).privateKey;
+  
+    const feePayerKey = PrivateKey.fromBase58(deployerPrivateKeyBase58);
+    const zkAppPrivateKey = feePayerKey;
+    return {
+      feePayerPrivateKey: feePayerKey,
+      feePayerPublicKey: feePayerKey.toPublicKey(),
+      zkAppPrivateKey: zkAppPrivateKey,
+      zkAppPublicKey: zkAppPrivateKey.toPublicKey()
+  }
+}}
+
+// ========================================================
+export async function deployZkApp(useLocal: boolean, feePayerKey: PrivateKey, zkAppPrivateKey: PrivateKey, serverPublicKey: PublicKey) {
+  if (!useLocal){
+    console.log('Compiling smart contract...');
+    await NumberTreeContract.compile();
+  }
+  
+  const zkApp = new NumberTreeContract(zkAppPrivateKey.toPublicKey());
+  
+  if (useLocal) {
+    const transaction = await Mina.transaction(feePayerKey.toPublicKey(), () => {
+      AccountUpdate.fundNewAccount(feePayerKey.toPublicKey());
+      zkApp.deploy({zkappKey: zkAppPrivateKey });
+      zkApp.initState(serverPublicKey);
+    });
+    transaction.sign([zkAppPrivateKey, feePayerKey]);
+    await transaction.prove();
+    await transaction.send();
+  } else {
+    let zkAppAccount = await loopUntilAccountExists({
+      account: zkAppPrivateKey.toPublicKey(),
+      eachTimeNotExist: () =>
+        console.log('waiting for zkApp account to be deployed...'),
+      isZkAppAccount: true,
+    });  
+    }
+    return zkApp
+  }
+
+// ========================================================
+export async function updateTree(zkApp: NumberTreeContract, useLocal: boolean, 
+  feePayerKey: PrivateKey, zkAppPrivateKey: PrivateKey, 
+  storageServerAddress: string, partipantkeys: ParticipantKeys, 
+  treeHeight: number, transactionFee: number, NodeXMLHttpRequest: typeof XMLHttpRequest) {
+  const index = BigInt(Math.floor(Math.random() * 4));
+
+  // get the existing tree
+  const treeRoot = await zkApp.storageTreeRoot.get();
+  const idx2fields = await OffChainStorage.get(
+    storageServerAddress,
+    partipantkeys.zkAppPublicKey,
+    treeHeight,
+    treeRoot,
+    NodeXMLHttpRequest
+  );
+
+  const tree = OffChainStorage.mapToTree(treeHeight, idx2fields);
+  const leafWitness = new OffChainStorage.MerkleWitness8(tree.getWitness(BigInt(index)));
+
+  // get the prior leaf
+  const priorLeafIsEmpty = !idx2fields.has(index);
+  let priorLeafNumber: Field;
+  let newLeafNumber: Field;
+  if (!priorLeafIsEmpty) {
+    priorLeafNumber = idx2fields.get(index)![0];
+    newLeafNumber = priorLeafNumber.add(3);
+  } else {
+    priorLeafNumber = Field(0);
+    newLeafNumber = Field(1);
+  }
+
+  // update the leaf, and save it in the storage server
+  idx2fields.set(index, [newLeafNumber]);
+
+  const [storedNewStorageNumber, storedNewStorageSignature] = await OffChainStorage.requestStore(
+    storageServerAddress,
+    partipantkeys.zkAppPublicKey,
+    treeHeight,
+    idx2fields,
+    NodeXMLHttpRequest
+  );
+
+  console.log('changing index', index, 'from', priorLeafNumber.toString(), 'to', newLeafNumber.toString());
+
+  // update the smart contract
+
+  const doUpdate = () => {
+    zkApp.update(
+      Bool(priorLeafIsEmpty),
+      priorLeafNumber,
+      newLeafNumber,
+      leafWitness,
+      storedNewStorageNumber,
+      storedNewStorageSignature
+    );
+  };
+
+  if (useLocal) {
+    const updateTransaction = await Mina.transaction(feePayerKey.toPublicKey(), doUpdate);
+
+    updateTransaction.sign([zkAppPrivateKey, feePayerKey]);
+    await updateTransaction.prove();
+    await updateTransaction.send();
+  } else {
+    await makeAndSendTransaction({
+      feePayerPrivateKey: feePayerKey,
+      zkAppPublicKey: partipantkeys.zkAppPublicKey,
+      mutateZkApp: () => doUpdate(),
+      transactionFee: transactionFee,
+      getState: () => zkApp.storageTreeRoot.get(),
+      statesEqual: (root1, root2) => root1.equals(root2).toBoolean(),
+    });
+  }
+  console.log('root updated to', zkApp.storageTreeRoot.get().toString());
+ }
