@@ -6,7 +6,7 @@ import {
     MerkleWitness,
     Signature,
     PublicKey,
-    Circuit,
+    Provable,
   } from 'snarkyjs';
   
   export class MerkleWitness4 extends MerkleWitness(4) {}
@@ -49,11 +49,11 @@ import {
         updates[i];
   
       // check the root is starting from the correct state
-      let leafHash = Circuit.if(leafIsEmpty, emptyLeaf, Poseidon.hash(leaf));
+      let leafHash = Provable.if(leafIsEmpty, emptyLeaf, Poseidon.hash(leaf));
       leafWitness.calculateRoot(leafHash).assertEquals(currentRoot);
   
       // calculate the new root after setting the leaf
-      let newLeafHash = Circuit.if(
+      let newLeafHash = Provable.if(
         newLeafIsEmpty,
         emptyLeaf,
         Poseidon.hash(newLeaf)
