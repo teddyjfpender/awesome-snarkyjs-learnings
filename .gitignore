@@ -16,3 +16,6 @@ keys
 !.env
 
 .bin
+
+# Ignore all database.json files in any directory
+database.json
