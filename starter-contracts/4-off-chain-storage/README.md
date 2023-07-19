@@ -54,6 +54,9 @@ OffChainServer->>SmartContract: Create update transaction with new tree root
 SmartContract->>SmartContract: Updates state (storageNumber, storageTreeRoot) with values from storage server
 Note right of SmartContract: State variables of the smart contract are updated
 ```
+## Other thoughts
+
+How can we make the state-updates made to the L1 of varying size? Instead of updating the contract's state each time the Merkle tree is mutated, we can build a solution that makes state-updates to the L1 after `n` mutations where `n > 1`. Such an approach maximise utilisation of blockspace and not the amount of blockspace.
 
 ## How to build
 
