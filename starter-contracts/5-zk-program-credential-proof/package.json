@@ -1,5 +1,5 @@
 {
-  "name": "counter-contract-recursion",
+  "name": "zk-program-credential-proving",
   "version": "0.1.0",
   "description": "",
   "author": "",
@@ -46,6 +46,7 @@
     "snarkyjs": "0.11.*"
   },
   "dependencies": {
+    "mina-signer": "^2.1.0",
     "xmlhttprequest-ts": "^1.0.1"
   }
 }

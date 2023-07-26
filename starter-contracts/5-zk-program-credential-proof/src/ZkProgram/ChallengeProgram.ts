@@ -1,12 +1,16 @@
-import { Field, Experimental, Struct, Signature, Bool, PublicKey } from 'snarkyjs';
+import { Field, Experimental, Struct, Signature, Bool, PublicKey, SelfProof } from 'snarkyjs';
 
 /**
  * A basic claim about a subject made by an issuer
  * Says whether the subject has passed KYC
  */
 export class Claim extends Struct({
-  kyc: Bool,
+  kyc: Field,
   Subject: PublicKey,
+}) {}
+
+export class SignedClaim extends Struct({
+  claim: Claim,
   signatureIssuer: Signature
 }) {}
 
@@ -14,7 +18,7 @@ export class Claim extends Struct({
  * A basic proof that by the subject about the claim
  */
 export class CredentialVerificationPublicInput extends Struct({
-    claim: Claim,
+    signedClaim: SignedClaim,
     signatureSubject: Signature,
   }) {}
 
@@ -26,29 +30,23 @@ export class CredentialVerificationPublicOutput extends Struct({
   }) {}
 
 /**
- * The public key of the trusted issuer
+ * The public key of the trusted issuer - this is hard coded here for testing purposes
  */
-export const PublicKeyIssuer: PublicKey = "B62qjsV6WQwTeEWrNrRRBP6VaaLvQhwWTnFi4WP4LQjGvpfZEumXzxb" as unknown as PublicKey;
+export const PublicKeyIssuer = PublicKey.fromBase58("B62qiqpgz7MgwZPNdkgG8bCZTgox9Ee9ef66ZU5R2o2cJm4k5m2WkRC");
 
 export const ProveCredential = Experimental.ZkProgram({
   publicInput: CredentialVerificationPublicInput,
-  publicOutput: CredentialVerificationPublicOutput,
 
   methods: {
     init: {
       privateInputs: [],
 
-      method(publicInput: CredentialVerificationPublicInput): CredentialVerificationPublicOutput {
-        // assert the claim is signed by the correct, known, public key or a public key in a set of possible signers
-        // this takes the public key of the expected issuer and the signed message which is of type Feild[]
-        // We want to verify that the the claim is signed by the issuer and that the claim about `kyc` is true
-        publicInput.claim.signatureIssuer.verify(PublicKeyIssuer, [publicInput.claim.kyc.toField()]);
-        // assert the claim is signed by the subject
-        publicInput.signatureSubject.verify(publicInput.claim.Subject, [/*signed claim data*/]);
-        // assert the kyc field is true
-        publicInput.claim.kyc.assertEquals(Bool(true));
-        // return a public output that is true if the claim is valid and false otherwise
-        return new CredentialVerificationPublicOutput({ verified: Bool(true) });
+      method(publicInput: CredentialVerificationPublicInput) {
+        // assert the presentation is signed by the subject
+        publicInput.signatureSubject.verify(publicInput.signedClaim.claim.Subject, publicInput.signedClaim.signatureIssuer.toFields()).assertTrue();
+        // assert the claim about the subject is true that the kyc is true, about the expected subject, and signed by the issuer - if kyc'd successfully expect Field(1)
+        publicInput.signedClaim.signatureIssuer.verify(PublicKeyIssuer, [Field(1)].concat(publicInput.signedClaim.claim.Subject.toFields())).assertTrue();
+        // TODO: return a public output 
       },
     },
   },

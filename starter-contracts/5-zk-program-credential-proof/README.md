@@ -1,5 +1,7 @@
 # Mina zkProgram: Challenge A User For Proof Of Credentials
 
+This is a Typescript example of using a `snarkyjs` ZkProgram to prove that a subject has been issued credentials by an issuer and that they know of those credentials. The example in this repository uses a `kyc` property of a claim.
+
 
 ## How to build
 
