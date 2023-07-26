@@ -30,11 +30,11 @@ Challenger->>Challenger: Verifies proof
 ## Data Structures
 This program primarily utilizes the following classes and structures:
 
-`Claim`: A basic claim about a subject made by an issuer. It includes the subject's public key and a `kyc` field to represent the KYC status.
-`SignedClaim`: This includes a claim along with a signature of the claim by the issuer.
-`CredentialVerificationPrivateInput`: This represents a private input constructed by the subject about the claim. It consists of a signed claim and the subject's signature.
-`PublicKeyIssuer`: This is the public key of the trusted issuer. It is hard coded for testing purposes.
-`ProveCredential`: This is an instance of the `Experimental.ZkProgram` where the initialization (i.e., the `init` method) involves verification of the presentation and claim's authenticity.
+- `Claim`: A basic claim about a subject made by an issuer. It includes the subject's public key and a `kyc` field to represent the KYC status.
+- `SignedClaim`: This includes a claim along with a signature of the claim by the issuer.
+- `CredentialVerificationPrivateInput`: This represents a private input constructed by the subject about the claim. It consists of a signed claim and the subject's signature.
+- `PublicKeyIssuer`: This is the public key of the trusted issuer. It is hard coded for testing purposes.
+- `ProveCredential`: This is an instance of the `Experimental.ZkProgram` where the initialization (i.e., the `init` method) involves verification of the presentation and claim's authenticity.
 
 ## How to build
 
