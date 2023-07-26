@@ -10,7 +10,7 @@ participant Issuer
 participant Challenger
 participant ZkProgram
 Issuer->>Subject: Makes claim & issues credentials
-Challenger->>Subject: Asks Subject to prove, using ZkProgam Issuer has made a specific claim
+Challenger->>Subject: Asks Subject to prove, using ZkProgam, Issuer has made a specific claim
 Subject->>ZkProgram: Constructs PublicInputs with issued credentials and runs ZkProgram
 ZkProgram->>Subject: Creates proof
 Subject->>Challenger: Shares proof
