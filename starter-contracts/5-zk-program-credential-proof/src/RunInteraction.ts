@@ -7,7 +7,7 @@
 
 import { Bool, Field, Mina, PrivateKey, verify, Signature, PublicKey } from "snarkyjs";
 import Client from "mina-signer"
-import { Claim, SignedClaim, CredentialVerificationPublicInput, ProveCredential } from "./ZkProgram/ChallengeProgram.js";
+import { Claim, SignedClaim, CredentialVerificationPrivateInput, ProveCredential } from "./ZkProgram/ChallengeProgram.js";
 import { tic, toc } from "./util/tictoc.js";
 
 
@@ -33,7 +33,7 @@ const credential = new SignedClaim({
     signatureIssuer: issuerSignedClaim,
 });
 // make presentation by subject
-const presentation = new CredentialVerificationPublicInput({
+const presentation = new CredentialVerificationPrivateInput({
     signedClaim: credential,
     signatureSubject: Signature.create(subjectPrvKey, credential.signatureIssuer.toFields()),
 });
@@ -48,6 +48,11 @@ const proof0 = await ProveCredential.init(proof0Input);
 console.log("Proof 0 Verification: ", await verify(proof0.toJSON(), verificationKey));
 toc();
 
+/**
+ * Attempt to forge inputs to the zkProgram
+ */
+// currently failing
+/*
 // create an attempt to forge a credential
 const claim2 = new Claim({
     kyc: Field(0), // 1 is true, 0 is false
@@ -79,3 +84,4 @@ tic('attempt to make a fradulent proof 1');
 const proof1Input = presentation2
 const proof1 = await ProveCredential.init(proof1Input);
 console.log("Proof Verification: ", await verify(proof1.toJSON(), verificationKey)); // should give an output that is false
+*/

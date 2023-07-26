@@ -17,7 +17,7 @@ export class SignedClaim extends Struct({
 /**
  * A basic proof that by the subject about the claim
  */
-export class CredentialVerificationPublicInput extends Struct({
+export class CredentialVerificationPrivateInput extends Struct({
     signedClaim: SignedClaim,
     signatureSubject: Signature,
   }) {}
@@ -35,17 +35,15 @@ export class CredentialVerificationPublicOutput extends Struct({
 export const PublicKeyIssuer = PublicKey.fromBase58("B62qiqpgz7MgwZPNdkgG8bCZTgox9Ee9ef66ZU5R2o2cJm4k5m2WkRC");
 
 export const ProveCredential = Experimental.ZkProgram({
-  publicInput: CredentialVerificationPublicInput,
 
   methods: {
     init: {
-      privateInputs: [],
-
-      method(publicInput: CredentialVerificationPublicInput) {
+      privateInputs: [CredentialVerificationPrivateInput], // credentials can be treated as private inputs
+      method(privateInputs) {
         // assert the presentation is signed by the subject
-        publicInput.signatureSubject.verify(publicInput.signedClaim.claim.Subject, publicInput.signedClaim.signatureIssuer.toFields()).assertTrue();
+        privateInputs.signatureSubject.verify(privateInputs.signedClaim.claim.Subject, privateInputs.signedClaim.signatureIssuer.toFields()).assertTrue();
         // assert the claim about the subject is true that the kyc is true, about the expected subject, and signed by the issuer - if kyc'd successfully expect Field(1)
-        publicInput.signedClaim.signatureIssuer.verify(PublicKeyIssuer, [Field(1)].concat(publicInput.signedClaim.claim.Subject.toFields())).assertTrue();
+        privateInputs.signedClaim.signatureIssuer.verify(PublicKeyIssuer, [Field(1)].concat(privateInputs.signedClaim.claim.Subject.toFields())).assertTrue();
         // TODO: return a public output 
       },
     },
