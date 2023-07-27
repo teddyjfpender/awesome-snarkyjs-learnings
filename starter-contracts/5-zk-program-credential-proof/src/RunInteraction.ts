@@ -6,7 +6,6 @@
  */
 
 import { Bool, Field, Mina, PrivateKey, verify, Signature, PublicKey } from "snarkyjs";
-import Client from "mina-signer"
 import { Claim, SignedClaim, CredentialVerificationPrivateInput, ProveCredential } from "./ZkProgram/ChallengeProgram.js";
 import { tic, toc } from "./util/tictoc.js";
 
@@ -19,6 +18,7 @@ Mina.setActiveInstance(local);
 const issuerPrvKey = PrivateKey.fromBase58("EKFEYnjhww3d8a29ZXdTnaJWH8X1Jou2gPNCBTmx752gknYm3Zpd");
 const issuerPubKey = PublicKey.fromBase58("B62qiqpgz7MgwZPNdkgG8bCZTgox9Ee9ef66ZU5R2o2cJm4k5m2WkRC");
 const { privateKey: subjectPrvKey, publicKey: subjectPubKey } = local.testAccounts[1];
+
 
 // issuer creates a claim
 const claim = new Claim({

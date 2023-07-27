@@ -1,4 +1,4 @@
-import { Field, Experimental, Struct, Signature, Bool, PublicKey, SelfProof } from 'snarkyjs';
+import { Field, Experimental, Struct, Signature, Bool, PublicKey } from 'snarkyjs';
 
 /**
  * A basic claim about a subject made by an issuer
