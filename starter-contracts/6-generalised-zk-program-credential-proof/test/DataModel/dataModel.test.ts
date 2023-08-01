@@ -1,6 +1,7 @@
 import { Poseidon, PrivateKey } from "snarkyjs";
 import { constructClaim, constructSignedClaim, constructPresentation } from "../../src/util/construction";
 import { claimToField, stringToField } from "../../src/util/conversion";
+import { verifyPresentation } from "../../src/util/verification";
 
 describe('Claims and SignedClaims', () => {
 
@@ -87,33 +88,33 @@ describe('Claims and SignedClaims', () => {
     
         const subjectPresentation = constructPresentation(signedClaim, subjectPrvKey);
     
-        // Verify the claim in the presentation is signed by the expected trusted issuer
-        const verifiedPresentation = subjectPresentation.signedClaim.signatureIssuer.verify(
-            issuerPublicKey,
-            [subjectPresentation.signedClaim.claimRoot]
-        ).toBoolean();
-        expect(verifiedPresentation).toBe(true);
-    
-        // Verify the claim in the presentation is signed by the expected subject
-        const verifiedSubject = subjectPresentation.signatureSubject.verify(
-            subjectPublicKey,
-            subjectPresentation.signedClaim.signatureIssuer.toFields()
-        ).toBoolean();
-        expect(verifiedSubject).toBe(true);
-    
-        // Expect the claim root in the presentation is the same as the claim root in the signed claim
-        const rootsMatch = subjectPresentation.signedClaim.claimRoot.equals(claim.getRoot()).toBoolean();
-        expect(rootsMatch).toBe(true);
-    
-        // Verify the claim contains the expected fields using Merkle witnesses
-        const keys = ["over18", "kyc", "subject"];
-        const expectedValues = [claimToField("true"), claimToField("passed"), claimToField(subjectPublicKey)];
-        for(let i = 0; i < keys.length; i++) {
-            const witness = claim.getWitness(keys[i]);
-            const expectedValue = expectedValues[i];
-            const [computedRoot, _] = witness.computeRootAndKey(expectedValue);
-            const isValidClaim = computedRoot.equals(claim.getRoot()).toBoolean();
-            expect(isValidClaim).toBe(true);
+        // Verify the presentation
+        const allKeys = ["over18", "kyc", "subject"];
+        const allValues = [claimToField("true"), claimToField("passed"), claimToField(subjectPublicKey)];
+
+        // Select a random subset of keys and values to verify
+        const numToSelect = Math.floor(Math.random() * allKeys.length) + 1;
+        const indices: number[] = [];
+        while (indices.length < numToSelect) {
+            let idx = Math.floor(Math.random() * allKeys.length);
+            if (!indices.includes(idx)) {
+                indices.push(idx);
+            }
         }
+
+        const expectedKeys = indices.map(i => allKeys[i]);
+        const expectedValues = indices.map(i => allValues[i]);
+        // TODO: check if this is the correct way to do this
+        // TODO: find out if there is a more concise way to do this
+        const isVerified = verifyPresentation(
+          subjectPresentation,
+          issuerPublicKey,
+          subjectPublicKey,
+          claim,
+          expectedKeys,
+          expectedValues
+        );
+    
+        expect(isVerified).toBe(true);
     });
   });
