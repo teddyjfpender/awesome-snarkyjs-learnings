@@ -38,6 +38,7 @@ export function publicKeyHash(publicKey: PublicKey): Field {
  * @param claim a claim to convert to a field
  * @returns a field
  */
+// TODO: make this able to handle arbitrary data structures (e.g. nested dictionaries)
   export function claimToField(claim: ClaimType): Field {
     if (typeof claim === 'string') {
       return stringToField(claim);

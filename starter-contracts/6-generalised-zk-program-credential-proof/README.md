@@ -1,16 +1,11 @@
 # Generalised Credential Issuance & Attestation
 
-This is a basic Typescript example of how to construct `Claim`s about a subject and for a subject to attest claims.
+This is a basic Typescript example of how to construct verifiable credentials about a subject.
 
 ## How to build
 
 ```sh
 npm run build
-```
-
-## How to run the `RunInteraction.js` script
-```sh
-npm run build && node build/src/RunInteraction.js
 ```
 
 ## How to run tests
