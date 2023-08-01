@@ -139,6 +139,8 @@ describe('Claims and SignedClaims', () => {
 
         // expect the inferred claim for the field "over16" to be true
         expect(inferredClaim.getField("over16")?.equals(claimToField("true")).toBoolean()).toBe(true);
+        // with this inferred claim we would need both the original Claim (MerkleMap) and the inferred Claim (MerkleMap)
+        // a verifier would need to check each of the claims and the inferred claim to verify the inferred claim is true
     });
     // TODO: add test for W3C Verifiable Credentials Data Model 
   });
