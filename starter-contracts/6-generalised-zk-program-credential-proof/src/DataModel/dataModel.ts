@@ -6,6 +6,7 @@ import { ClaimType } from './types.js';
  * A claim is a MerkleMap of key-value pairs
  * where the key is a string and the value is a ClaimType
  */
+// TODO: make Claim<T> where T is a value
 export class Claim {
   private map: MerkleMap;
 
@@ -29,11 +30,6 @@ export class Claim {
     return this.map.getWitness(stringToField(key));
   }
 }
-
-// TODO: consider making a second claim class that a subject can construct from a signed claim & its original claim
-// that can allow the subject to make claims about themselves that the issuer has not made specifically but can be inferred from the original claim
-// e.g. if the issuer makes a claim that the subject is over 18, the subject can make a claim that they are over 16
-// e.g.  if the issuer makes a claim that the subject is 21, the subject can make a claim that they are over 18
 
 /**
  * A signed claim is a claim that has been signed by an issuer

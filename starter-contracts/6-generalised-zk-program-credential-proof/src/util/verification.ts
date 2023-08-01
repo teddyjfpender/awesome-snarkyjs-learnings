@@ -25,33 +25,39 @@ export function verifyPresentation(
     expectedKeys: string[],
     expectedValues: Field[]
   ): boolean {
-    // Verify the claim in the presentation is signed by the expected trusted issuer
-    const verifiedPresentation = subjectPresentation.signedClaim.signatureIssuer.verify(
-        issuerPublicKey,
-        [subjectPresentation.signedClaim.claimRoot]
-    ).toBoolean();
-    if (!verifiedPresentation) return false;
-  
-    // Verify the claim in the presentation is signed by the expected subject
-    const verifiedSubject = subjectPresentation.signatureSubject.verify(
-        subjectPublicKey,
-        subjectPresentation.signedClaim.signatureIssuer.toFields()
-    ).toBoolean();
-    if (!verifiedSubject) return false;
-  
-    // Expect the claim root in the presentation is the same as the claim root in the signed claim
-    const rootsMatch = subjectPresentation.signedClaim.claimRoot.equals(claim.getRoot()).toBoolean();
-    if (!rootsMatch) return false;
-  
-    // Verify the claim contains the expected fields using Merkle witnesses
-    for(let i = 0; i < expectedKeys.length; i++) {
-      const witness = claim.getWitness(expectedKeys[i]);
-      const expectedValue = expectedValues[i];
-      const [computedRoot, _] = witness.computeRootAndKey(expectedValue);
-      const isValidClaim = computedRoot.equals(claim.getRoot()).toBoolean();
-      if (!isValidClaim) return false;
-    }
-  
-    return true;
+    try {
+        if (!subjectPresentation.signedClaim.signatureIssuer.verify(issuerPublicKey, [subjectPresentation.signedClaim.claimRoot]).toBoolean()) {
+          throw new Error("Failed to verify that the claim in the presentation is signed by the expected trusted issuer.");
+        }
+      
+        if (!subjectPresentation.signatureSubject.verify(subjectPublicKey, subjectPresentation.signedClaim.signatureIssuer.toFields()).toBoolean()) {
+          throw new Error("Failed to verify that the claim in the presentation is signed by the expected subject.");
+        }
+      
+        if (!subjectPresentation.signedClaim.claimRoot.equals(claim.getRoot()).toBoolean()) {
+          throw new Error("Claim root in the presentation does not match the root of the claim.");
+        }
+      
+        // Creating the map from expected keys and values.
+        // allows constant time lookup of expected values
+        let expectedMap = new Map();
+        for(let i = 0; i < expectedKeys.length; i++) {
+        expectedMap.set(expectedKeys[i], expectedValues[i]);
+        }
+
+        for(let key of expectedMap.keys()) {
+        const witness = claim.getWitness(key);
+        const expectedValue = expectedMap.get(key);
+        const [computedRoot, _] = witness.computeRootAndKey(expectedValue);
+        if (!computedRoot.equals(claim.getRoot()).toBoolean()) {
+            throw new Error(`Failed to verify claim for the key: ${key}`);
+            }
+        }
+      } catch(error) {
+        console.log(error);
+        return false;
+      }
+      
+      return true;
   }
   

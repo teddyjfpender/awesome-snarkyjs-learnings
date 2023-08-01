@@ -14,11 +14,20 @@ export function stringToField(str: string): Field {
     return Poseidon.hash(fromBytes(bytes));
   }
 
-  /**
-   * 
-   * @param fields an array of fields to convert to a single field
-   * @returns a field
-   */
+/**
+ * 
+ * @param num a number to convert to a field
+ * @returns a field
+ */
+export function numberToField(num: number): Field {
+    return stringToField(num.toString());
+}
+
+/**
+ * 
+ * @param fields an array of fields to convert to a single field
+ * @returns a field
+ */
 export function publicKeyHash(publicKey: PublicKey): Field {
       // use Poseidon hash function to convert bytes to single field
     return Poseidon.hash(publicKey.toFields());
@@ -32,6 +41,8 @@ export function publicKeyHash(publicKey: PublicKey): Field {
   export function claimToField(claim: ClaimType): Field {
     if (typeof claim === 'string') {
       return stringToField(claim);
+    } else if (typeof claim === 'number') {
+      return numberToField(claim);
     } else if (typeof claim === 'object') {
       return publicKeyHash(claim);
     } else {
