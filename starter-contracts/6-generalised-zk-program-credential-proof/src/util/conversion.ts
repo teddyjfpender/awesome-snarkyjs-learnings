@@ -1,4 +1,4 @@
-import { Field, Encoding, Poseidon } from "snarkyjs";
+import { Field, Encoding, Poseidon, PublicKey } from "snarkyjs";
 import { ClaimType } from "../DataModel";
 
 let {toBytes, fromBytes} = Encoding.Bijective.Fp;
@@ -19,9 +19,9 @@ export function stringToField(str: string): Field {
    * @param fields an array of fields to convert to a single field
    * @returns a field
    */
-export function fieldsHash(fields: Field[]): Field {
+export function publicKeyHash(publicKey: PublicKey): Field {
       // use Poseidon hash function to convert bytes to single field
-    return Poseidon.hash(fields);
+    return Poseidon.hash(publicKey.toFields());
 }
 
 /**
@@ -32,8 +32,10 @@ export function fieldsHash(fields: Field[]): Field {
   export function claimToField(claim: ClaimType): Field {
     if (typeof claim === 'string') {
       return stringToField(claim);
+    } else if (typeof claim === 'object') {
+      return publicKeyHash(claim);
     } else {
-      return fieldsHash(claim);
+      throw new Error("Claim type not recognised");
     }
   }
 

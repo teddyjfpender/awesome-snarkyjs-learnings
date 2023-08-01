@@ -1,3 +1,3 @@
-import { Field } from "snarkyjs";
+import { PublicKey } from "snarkyjs";
 
-export type ClaimType = string | Field[];
+export type ClaimType = string | PublicKey;

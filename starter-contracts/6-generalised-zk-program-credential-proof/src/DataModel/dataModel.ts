@@ -1,7 +1,11 @@
 import { Field, PrivateKey, Signature, MerkleMap, Struct, MerkleMapWitness } from 'snarkyjs';
-import { stringToField, claimToField } from '../util/conversion.js';  // Assuming that's where your function is
+import { stringToField, claimToField } from '../util/conversion.js'; 
 import { ClaimType } from './types.js';
 
+/**
+ * A claim is a MerkleMap of key-value pairs
+ * where the key is a string and the value is a ClaimType
+ */
 export class Claim {
   private map: MerkleMap;
 
@@ -26,8 +30,11 @@ export class Claim {
   }
 }
 
+/**
+ * A signed claim is a claim that has been signed by an issuer
+ * the signature is a signature of the Claim root (where the Claim is a MerkleMap)
+ */
 export class SignedClaim extends Struct({
-  // only the root of the MerkleMap claim is signed
   claimRoot: Field,
   signatureIssuer: Signature
 }) {
@@ -38,14 +45,18 @@ export class SignedClaim extends Struct({
   }
 }
 
-export function constructClaim(claims: {[key: string]: ClaimType}): Claim {
-  const claim = new Claim();
-  for (const key in claims) {
-    claim.addField(key, claims[key]);
+/**
+ * A credential presentation that can be used as a private/public input for a ZkProgram
+ * or as a data structure attesting to being the owner of a credential
+ */
+export class CredentialPresentation extends Struct({
+  signedClaim: SignedClaim,
+  signatureSubject: Signature,
+}) {
+  constructor(signedClaim: SignedClaim, subjectPrvKey: PrivateKey) {
+    const root = signedClaim.claimRoot;
+    const signatureIssuer = signedClaim.signatureIssuer;
+    const signatureSubject = Signature.create(subjectPrvKey, signatureIssuer.toFields());
+    super({signedClaim: signedClaim, signatureSubject: signatureSubject});
   }
-  return claim;
-}
-
-export function constructSignedClaim(claim: Claim, issuerPrvKey: PrivateKey): SignedClaim {
-  return new SignedClaim(claim, issuerPrvKey);
 }
