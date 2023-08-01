@@ -4,11 +4,11 @@ import { Rule } from '../DataModel';
 // WIP 🚧
 
 export const ProveInferredCredential = Experimental.ZkProgram({
-
+    
     methods: {
       attest: {
         privateInputs: [SignedSubjectInferredClaim], // the original claim and inferred claim can be treated as private inputs
-        publicInputs: [Rule[]], // the rules can be treated as public inputs
+        publicInputs: [Rule[]], // an array of Rules can be treated as public inputs
         method(privateInputs, publicInputs) {
           // assert the original claim and inferred claim are signed by the subject
           privateInputs.signedSubjectInferredClaim.signatureSubject.verify(
@@ -40,7 +40,7 @@ export const ProveInferredCredential = Experimental.ZkProgram({
             }
   
             privateInputs.signedSubjectInferredClaim.inferredClaimRoot.getField(rule.inferredFieldName)
-              .equal(inferredValue ? Field.ONE : Field.ZERO)
+              .equal(inferredValue ? Field(1) : Field(0))
               .assertTrue();
           }
         },

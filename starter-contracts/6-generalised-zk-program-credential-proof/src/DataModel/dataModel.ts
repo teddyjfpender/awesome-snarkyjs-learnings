@@ -7,6 +7,8 @@ import { ClaimType } from './types.js';
  * where the key is a string and the value is a ClaimType
  */
 // TODO: make Claim<T> where T is a value
+// technically the root of many claims can be stored on-chain by an issuer.
+// making their merklemapp available off-chain via a DA layer would be an interesting solution
 export class Claim {
   private map: MerkleMap;
 
