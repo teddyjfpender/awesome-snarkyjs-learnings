@@ -55,7 +55,7 @@ console.log("attestationProof Verification: ", await verify(proofResponse.attest
 
 - Currently the prover can only attest to a single property of their credentials using the `prove` method. The next step should be to allow a user to merge multiple proofs into a single rollup-style proof that attests to multiple claims about their credentials. In this scenario, the `prove` method should take an argument of `Array<Rule>` and construct a single proof that can be verified.
 
-- Ensure that the claims can be nested objects that comply with (W3C Data Model)[https://w3c-ccg.github.io/universal-wallet-interop-spec/#Data%20Model]
+- Ensure that the claims can be nested objects that comply with [W3C Data Model](https://w3c-ccg.github.io/universal-wallet-interop-spec/#Data%20Model)
 
 ## How to build
 
