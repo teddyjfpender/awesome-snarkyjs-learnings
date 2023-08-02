@@ -118,29 +118,5 @@ describe('Claims and SignedClaims', () => {
     
         expect(isVerified).toBe(true);
     });
-    it('subject should make an inferred claim about a claim they have received from a trusted issuer', () => {
-        // construct a claim that the subject is 18 years old
-        const subjectPrvKey = PrivateKey.random();
-        const subjectPublicKey = subjectPrvKey.toPublicKey();
-        const claim = constructClaim({age: 18, subject: subjectPublicKey});
-        // issuer keys
-        const issuerPrvKey = PrivateKey.random();
-        const issuerPublicKey = issuerPrvKey.toPublicKey();
-        // construct a signed claim that the subject is 18 years old
-        const signedClaim = constructSignedClaim(claim, issuerPrvKey);
-
-        // construct an inferred claim that the subject is over 16 years old
-        const rules: Rule[] = [
-            {field: "age", operation: "gt", value: 16, inferredFieldName: "over16"}
-        ]
-        // TODO: change constructInferredClaim to take a ZkProgram, this creates
-        // a proof that the inferred claim is true. It should take a the signed claim by the issuer etc.
-        const inferredClaim = constructInferredClaim(claim, rules);
-
-        // expect the inferred claim for the field "over16" to be true
-        expect(inferredClaim.getField("over16")?.equals(claimToField("true")).toBoolean()).toBe(true);
-        // with this inferred claim we would need both the original Claim (MerkleMap) and the inferred Claim (MerkleMap)
-        // a verifier would need to check each of the claims and the inferred claim to verify the inferred claim is true
-    });
     // TODO: add test for W3C Verifiable Credentials Data Model 
   });
