@@ -64,40 +64,17 @@ export class CredentialPresentation extends Struct({
   }
 }
 
-/*export interface Rule {
-  field: string;
-  operation: 'lt' | 'lte' | 'eq' | 'gte' | 'gt';
-  value: number;
-  inferredFieldName: string;
-};*/
-export class Rule extends Struct({
-  field: String,
-  operation: String,
-  value: Number,
-  inferredFieldName: String,
-}) {
-  constructor(field: string, operation: string, value: number, inferredFieldName: string) {
-    super({field: field, operation: operation, value: value, inferredFieldName: inferredFieldName});
-  }
-}
-
-
 /**
- * A Proving Rule class that can be used as a public input for a ZkProgram
- * provided by a challenger to a credential owner to prove a credential has a certain property
+ * A proving rule is a rule that can be used to infer a claim from another claim
+ * this can be provided by a challenger to a prover to a property on a claim
  */
-/*
-export class ProvingRules {
-  rules: Array<Rule>;
-
-  constructor(rules: Array<Rule>) {
-    this.rules = rules;
-  }
-}*/
-export class ProvingRules extends Struct({
-  rules: Array(Rule),
+export class Rule extends Struct({
+  field: Field,
+  operation: Field,
+  value: Field,
+  inferredFieldName: Field,
 }) {
-  constructor(rules: Array<Rule>) {
-    super({rules: rules});
+  constructor(field: Field, operation: Field, value: Field, inferredFieldName: Field) {
+    super({field: field, operation: operation, value: value, inferredFieldName: inferredFieldName});
   }
 }
