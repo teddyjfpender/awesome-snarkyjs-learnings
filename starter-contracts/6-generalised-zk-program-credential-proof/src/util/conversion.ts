@@ -20,7 +20,7 @@ export function stringToField(str: string): Field {
  * @returns a field
  */
 export function numberToField(num: number): Field {
-    return stringToField(num.toString());
+    return Field(num);
 }
 
 /**

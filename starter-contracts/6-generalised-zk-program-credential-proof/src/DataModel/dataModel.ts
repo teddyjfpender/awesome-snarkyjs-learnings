@@ -1,5 +1,5 @@
 import { Field, PrivateKey, Signature, MerkleMap, Struct, MerkleMapWitness } from 'snarkyjs';
-import { stringToField, claimToField } from '../util/conversion.js'; 
+import { stringToField, claimToField, numberToField } from '../util/conversion.js'; 
 import { ClaimType } from './types.js';
 
 /**
@@ -69,12 +69,11 @@ export class CredentialPresentation extends Struct({
  * this can be provided by a challenger to a prover to a property on a claim
  */
 export class Rule extends Struct({
-  field: Field,
-  operation: Field,
-  value: Field,
-  inferredFieldName: Field,
+  field: Field, // this is the field of the claim object NOT a Field snarkyjs type, it is converted to a field
+  operation: Field, // lt, lte, eq, gte, gt
+  value: Field, // the value to compare the field to
 }) {
-  constructor(field: Field, operation: Field, value: Field, inferredFieldName: Field) {
-    super({field: field, operation: operation, value: value, inferredFieldName: inferredFieldName});
+  constructor(field: string, operation: string, value: number) {
+    super({field: stringToField(field), operation: stringToField(operation), value: numberToField(value)});
   }
 }

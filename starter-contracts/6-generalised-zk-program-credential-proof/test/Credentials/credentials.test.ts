@@ -1,6 +1,7 @@
-import { PrivateKey } from "snarkyjs";
-import { ClaimType } from "../../src/DataModel";
+import { PrivateKey, verify } from "snarkyjs";
+import { ClaimType, CredentialPresentation, Rule } from "../../src/DataModel";
 import { Credential } from "../../src/Credentials"; 
+import { PublicInputArgs } from "../../src/ZkProgram";
 
 describe('Credential', () => {
     it('can construct a credential', () => {
@@ -57,5 +58,24 @@ describe('Credential', () => {
         const credential = Credential.create(claims, issuerPrvKey);
         const isValid = credential.verify(issuerPrvKey.toPublicKey(), subjectPrvKey.toPublicKey());
         expect(isValid).toBe(true);
+    });
+    it('can prove a claim', async () => {
+        const subjectPrvKey = PrivateKey.random();
+        const issuerPrvKey = PrivateKey.random();
+        const claims: {[key: string]: ClaimType} = {
+            age: 21,
+            subject: subjectPrvKey.toPublicKey()
+        };
+
+        const credential = Credential.create(claims, issuerPrvKey);
+        const property = "age";
+        const operation = "gte";
+        const value = 18;
+        const rule = new Rule(property, operation, value);
+        console.log("rule: ", rule);
+        
+        const proofResponse = await credential.prove("age", issuerPrvKey.toPublicKey(), rule, subjectPrvKey);
+        console.log("attestationProof Verification: ", await verify(proofResponse.attestationProof.toJSON(), proofResponse.verificationKey));
+        expect(verify(proofResponse.attestationProof.toJSON(), proofResponse.verificationKey)).toBeTruthy();
     });
 });

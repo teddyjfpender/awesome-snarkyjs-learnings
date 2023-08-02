@@ -1,6 +1,6 @@
 import { PrivateKey } from "snarkyjs";
 import { Claim, SignedClaim, CredentialPresentation } from "../DataModel/dataModel";
-import { ClaimType, Rule } from "../DataModel/types";
+import { ClaimType } from "../DataModel/types";
 
 /**
  * 
@@ -33,42 +33,4 @@ export function constructSignedClaim(claim: Claim, issuerPrvKey: PrivateKey): Si
  */
 export function constructPresentation(signedClaim: SignedClaim, subjectPrvKey: PrivateKey): CredentialPresentation {
     return new CredentialPresentation(signedClaim, subjectPrvKey);
-}
-
-/**
- * 
- * @param originalClaim a claim to construct an inferred claim from
- * @param rules an array of rules to use to infer new claims
- * @returns a claim (now one that is inferred from the original claim)
- */  
-// TODO: Change this to a ZkProgram
-export function constructInferredClaim(originalClaim: Claim, rules: Rule[]): Claim {
-    const inferredClaim = new Claim();
-
-    for (const rule of rules) {
-        const originalValue = Number(originalClaim.getField(rule.field));
-        let inferredValue: boolean;
-
-        switch (rule.operation) {
-        case 'lt':
-            inferredValue = originalValue < rule.value;
-            break;
-        case 'lte':
-            inferredValue = originalValue <= rule.value;
-            break;
-        case 'eq':
-            inferredValue = originalValue === rule.value;
-            break;
-        case 'gte':
-            inferredValue = originalValue >= rule.value;
-            break;
-        case 'gt':
-            inferredValue = originalValue > rule.value;
-            break;
-        }
-
-        inferredClaim.addField(rule.inferredFieldName, inferredValue ? 'true' : 'false');
-    }
-
-    return inferredClaim;
 }

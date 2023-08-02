@@ -1,5 +1,5 @@
 import { Poseidon, PrivateKey } from "snarkyjs";
-import { constructClaim, constructSignedClaim, constructPresentation, constructInferredClaim } from "../../src/util/construction";
+import { constructClaim, constructSignedClaim, constructPresentation } from "../../src/util/construction";
 import { claimToField, stringToField } from "../../src/util/conversion";
 import { verifyPresentation } from "../../src/util/verification";
 import { Rule } from "../../src/DataModel";
