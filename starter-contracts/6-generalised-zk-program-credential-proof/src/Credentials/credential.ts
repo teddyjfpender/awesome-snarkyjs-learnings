@@ -37,7 +37,7 @@ export class Credential {
         return true;
     }
 
-    // TODO: make an arbitary proof about the credentials (e.g. that the subject is over 18)
+    // TODO: make an arbitrary proof about the credentials (e.g. that the subject is over 18)
     // should take arguments that include those from a challenge object provided to the owner of the credentials
     // A challenge can include asserting e.g. the claim "age" is greater than 18, the claim is signed by an expected issuer, etc.
     // this should be a ZkProgram & must include the signature of the subject
